@@ -1,4 +1,3 @@
-# encoding: UTF-8
 # frozen_string_literal: true
 
 require "jwt"
@@ -41,7 +40,7 @@ module JWT
       def generate_jwt(payload, private_keychain, algorithms)
         proxy_exception JWT::EncodeError do
           algorithms_mapping = algorithms.with_indifferent_access
-          { payload:    base64_encode(payload.to_json),
+          { payload:    base64_encode(JSON.generate(payload)),
             signatures: private_keychain.map do |id, value|
               generate_jws(payload, id, value, algorithms_mapping.fetch(id))
             end }
@@ -197,7 +196,7 @@ module JWT
         proxy_exception JWT::DecodeError do
           encoded_header     = jws.fetch("protected")
           serialized_header  = base64_decode(encoded_header)
-          serialized_payload = payload.to_json
+          serialized_payload = JSON.generate(payload)
           encoded_payload    = base64_encode(serialized_payload)
           signature          = jws.fetch("signature")
           public_key         = public_keychain.with_indifferent_access.fetch(jws.fetch("header").fetch("kid"))
